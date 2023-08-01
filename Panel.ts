@@ -1,6 +1,6 @@
 // https://github.com/araragoo/QTechCag
 
-//% weight=5 color=#0fbc11 icon="\uf112" block="Insect"
+//% weight=5 color=#0fbc11 icon="\uf112" block="Panel"
 namespace Panel {
 
     let initialized = false
