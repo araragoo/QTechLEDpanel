@@ -1,15 +1,15 @@
 {
-    "name": "Cag",
+    "name": "LED Panel",
     "version": "0.0.0",
-    "description": "Extension for DRV8830 Motor Driver",
+    "description": "Extension for LED Panel",
     "license": "Ara",
     "dependencies": {
         "core": "*"
     },
     "files": [
         "README.md",
-        "Cag.ts",
-        "_locales/ja/Cag-strings.json"
+        "Panel.ts",
+        "_locales/ja/Panel-strings.json"
     ],
     "testFiles": [
         "test.ts"
