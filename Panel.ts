@@ -81,7 +81,7 @@ namespace Panel {
         basic.pause(2500 * cycle)
     }
 
-    export class Strip {
+//    export class Strip {
         buf: Buffer;
         pin: DigitalPin;
         // TODO: encode as bytes instead of 32bit
@@ -629,4 +629,4 @@ namespace Panel {
         CounterClockwise,
         Shortest
     }
-}
+//}
