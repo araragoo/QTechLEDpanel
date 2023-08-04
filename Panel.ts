@@ -93,7 +93,7 @@ namespace Panel {
      * @param rgb RGB color of the LED
      */
     //% subcategory="LED"
-    //% blockId="neopixel_set_strip_color" block="%strip|show color %rgb=neopixel_colors"
+    //% blockId=neopixel_set_strip_color block="%strip|show color %rgb=neopixel_colors"
     //% strip.defl=strip
     //% weight=85 blockGap=8
     //% parts="neopixel"
@@ -110,7 +110,7 @@ namespace Panel {
          * @param startHue the start hue value for the rainbow, eg: 1
          * @param endHue the end hue value for the rainbow, eg: 360
          */
-        //% blockId="neopixel_set_strip_rainbow" block="%strip|show rainbow from %startHue|to %endHue"
+        //% blockId=neopixel_set_strip_rainbow block="%strip|show rainbow from %startHue|to %endHue"
         //% strip.defl=strip
         //% weight=85 blockGap=8
         //% parts="neopixel"
