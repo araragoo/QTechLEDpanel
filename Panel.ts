@@ -103,7 +103,316 @@ namespace Panel {
         this.show();
     }
 
+             /**
+         * Set LED to a given color (range 0-255 for r, g, b).
+         * You need to call ``show`` to make the changes visible.
+         * @param pixeloffset position of the NeoPixel in the strip
+         * @param rgb RGB color of the LED
+         */
+        //% blockId="neopixel_set_pixel_color" block="%strip|set pixel color at %pixeloffset|to %rgb=neopixel_colors"
+        //% strip.defl=strip
+        //% blockGap=8
+        //% weight=80
+        //% parts="neopixel" advanced=true
+        setPixelColor(pixeloffset: number, rgb: number): void {
+            this.setPixelRGB(pixeloffset >> 0, rgb >> 0);
+        }
+
         /**
+         * Sets the number of pixels in a matrix shaped strip
+         * @param width number of pixels in a row
+         */
+        //% blockId=neopixel_set_matrix_width block="%strip|set matrix width %width"
+        //% strip.defl=strip
+        //% blockGap=8
+        //% weight=5
+        //% parts="neopixel" advanced=true
+        setMatrixWidth(width: number) {
+            this._matrixWidth = Math.min(this._length, width >> 0);
+        }
+
+        /**
+         * Set LED to a given color (range 0-255 for r, g, b) in a matrix shaped strip
+         * You need to call ``show`` to make the changes visible.
+         * @param x horizontal position
+         * @param y horizontal position
+         * @param rgb RGB color of the LED
+         */
+        //% blockId="neopixel_set_matrix_color" block="%strip|set matrix color at x %x|y %y|to %rgb=neopixel_colors"
+        //% strip.defl=strip
+        //% weight=4
+        //% parts="neopixel" advanced=true
+        setMatrixColor(x: number, y: number, rgb: number) {
+            if (this._matrixWidth <= 0) return; // not a matrix, ignore
+            x = x >> 0;
+            y = y >> 0;
+            rgb = rgb >> 0;
+            const cols = Math.idiv(this._length, this._matrixWidth);
+            if (x < 0 || x >= this._matrixWidth || y < 0 || y >= cols) return;
+            let i = x + y * this._matrixWidth;
+            this.setPixelColor(i, rgb);
+        }
+
+        /**
+         * For NeoPixels with RGB+W LEDs, set the white LED brightness. This only works for RGB+W NeoPixels.
+         * @param pixeloffset position of the LED in the strip
+         * @param white brightness of the white LED
+         */
+        //% blockId="neopixel_set_pixel_white" block="%strip|set pixel white LED at %pixeloffset|to %white"
+        //% strip.defl=strip
+        //% blockGap=8
+        //% weight=80
+        //% parts="neopixel" advanced=true
+        setPixelWhiteLED(pixeloffset: number, white: number): void {
+            if (this._mode === NeoPixelMode.RGBW) {
+                this.setPixelW(pixeloffset >> 0, white >> 0);
+            }
+        }
+
+        /**
+         * Send all the changes to the strip.
+         */
+        //% blockId="neopixel_show" block="%strip|show" blockGap=8
+        //% strip.defl=strip
+        //% weight=79
+        //% parts="neopixel"
+        show() {
+            // only supported in beta
+            // ws2812b.setBufferMode(this.pin, this._mode);
+            ws2812b.sendBuffer(this.buf, this.pin);
+        }
+
+        /**
+         * Turn off all LEDs.
+         * You need to call ``show`` to make the changes visible.
+         */
+        //% blockId="neopixel_clear" block="%strip|clear"
+        //% strip.defl=strip
+        //% weight=76
+        //% parts="neopixel"
+        clear(): void {
+            const stride = this._mode === NeoPixelMode.RGBW ? 4 : 3;
+            this.buf.fill(0, this.start * stride, this._length * stride);
+        }
+
+        /**
+         * Gets the number of pixels declared on the strip
+         */
+        //% blockId="neopixel_length" block="%strip|length" blockGap=8
+        //% strip.defl=strip
+        //% weight=60 advanced=true
+        length() {
+            return this._length;
+        }
+
+        /**
+         * Set the brightness of the strip. This flag only applies to future operation.
+         * @param brightness a measure of LED brightness in 0-255. eg: 255
+         */
+        //% blockId="neopixel_set_brightness" block="%strip|set brightness %brightness" blockGap=8
+        //% strip.defl=strip
+        //% weight=59
+        //% parts="neopixel" advanced=true
+        setBrightness(brightness: number): void {
+            this.brightness = brightness & 0xff;
+        }
+
+        /**
+         * Apply brightness to current colors using a quadratic easing function.
+         **/
+        //% blockId="neopixel_each_brightness" block="%strip|ease brightness" blockGap=8
+        //% strip.defl=strip
+        //% weight=58
+        //% parts="neopixel" advanced=true
+        easeBrightness(): void {
+            const stride = this._mode === NeoPixelMode.RGBW ? 4 : 3;
+            const br = this.brightness;
+            const buf = this.buf;
+            const end = this.start + this._length;
+            const mid = Math.idiv(this._length, 2);
+            for (let i = this.start; i < end; ++i) {
+                const k = i - this.start;
+                const ledoffset = i * stride;
+                const br = k > mid
+                    ? Math.idiv(255 * (this._length - 1 - k) * (this._length - 1 - k), (mid * mid))
+                    : Math.idiv(255 * k * k, (mid * mid));
+                const r = (buf[ledoffset + 0] * br) >> 8; buf[ledoffset + 0] = r;
+                const g = (buf[ledoffset + 1] * br) >> 8; buf[ledoffset + 1] = g;
+                const b = (buf[ledoffset + 2] * br) >> 8; buf[ledoffset + 2] = b;
+                if (stride == 4) {
+                    const w = (buf[ledoffset + 3] * br) >> 8; buf[ledoffset + 3] = w;
+                }
+            }
+        }
+
+        /**
+         * Create a range of LEDs.
+         * @param start offset in the LED strip to start the range
+         * @param length number of LEDs in the range. eg: 4
+         */
+        //% weight=89
+        //% blockId="neopixel_range" block="%strip|range from %start|with %length|leds"
+        //% strip.defl=strip
+        //% parts="neopixel"
+        //% blockSetVariable=range
+        range(start: number, length: number): Strip {
+            start = start >> 0;
+            length = length >> 0;
+            let strip = new Strip();
+            strip.buf = this.buf;
+            strip.pin = this.pin;
+            strip.brightness = this.brightness;
+            strip.start = this.start + Math.clamp(0, this._length - 1, start);
+            strip._length = Math.clamp(0, this._length - (strip.start - this.start), length);
+            strip._matrixWidth = 0;
+            strip._mode = this._mode;
+            return strip;
+        }
+
+        /**
+         * Shift LEDs forward and clear with zeros.
+         * You need to call ``show`` to make the changes visible.
+         * @param offset number of pixels to shift forward, eg: 1
+         */
+        //% blockId="neopixel_shift" block="%strip|shift pixels by %offset" blockGap=8
+        //% strip.defl=strip
+        //% weight=40
+        //% parts="neopixel"
+        shift(offset: number = 1): void {
+            offset = offset >> 0;
+            const stride = this._mode === NeoPixelMode.RGBW ? 4 : 3;
+            this.buf.shift(-offset * stride, this.start * stride, this._length * stride)
+        }
+
+        /**
+         * Rotate LEDs forward.
+         * You need to call ``show`` to make the changes visible.
+         * @param offset number of pixels to rotate forward, eg: 1
+         */
+        //% blockId="neopixel_rotate" block="%strip|rotate pixels by %offset" blockGap=8
+        //% strip.defl=strip
+        //% weight=39
+        //% parts="neopixel"
+        rotate(offset: number = 1): void {
+            offset = offset >> 0;
+            const stride = this._mode === NeoPixelMode.RGBW ? 4 : 3;
+            this.buf.rotate(-offset * stride, this.start * stride, this._length * stride)
+        }
+
+        /**
+         * Set the pin where the neopixel is connected, defaults to P0.
+         */
+        //% weight=10
+        //% parts="neopixel" advanced=true
+        setPin(pin: DigitalPin): void {
+            this.pin = pin;
+            pins.digitalWritePin(this.pin, 0);
+            // don't yield to avoid races on initialization
+        }
+
+        /**
+         * Estimates the electrical current (mA) consumed by the current light configuration.
+         */
+        //% weight=9 blockId=neopixel_power block="%strip|power (mA)"
+        //% strip.defl=strip
+        //% advanced=true
+        power(): number {
+            const stride = this._mode === NeoPixelMode.RGBW ? 4 : 3;
+            const end = this.start + this._length;
+            let p = 0;
+            for (let i = this.start; i < end; ++i) {
+                const ledoffset = i * stride;
+                for (let j = 0; j < stride; ++j) {
+                    p += this.buf[i + j];
+                }
+            }
+            return Math.idiv(this.length() * 7, 10) /* 0.7mA per neopixel */
+                + Math.idiv(p * 480, 10000); /* rought approximation */
+        }
+
+        private setBufferRGB(offset: number, red: number, green: number, blue: number): void {
+            if (this._mode === NeoPixelMode.RGB_RGB) {
+                this.buf[offset + 0] = red;
+                this.buf[offset + 1] = green;
+            } else {
+                this.buf[offset + 0] = green;
+                this.buf[offset + 1] = red;
+            }
+            this.buf[offset + 2] = blue;
+        }
+
+        private setAllRGB(rgb: number) {
+            let red = unpackR(rgb);
+            let green = unpackG(rgb);
+            let blue = unpackB(rgb);
+
+            const br = this.brightness;
+            if (br < 255) {
+                red = (red * br) >> 8;
+                green = (green * br) >> 8;
+                blue = (blue * br) >> 8;
+            }
+            const end = this.start + this._length;
+            const stride = this._mode === NeoPixelMode.RGBW ? 4 : 3;
+            for (let i = this.start; i < end; ++i) {
+                this.setBufferRGB(i * stride, red, green, blue)
+            }
+        }
+        private setAllW(white: number) {
+            if (this._mode !== NeoPixelMode.RGBW)
+                return;
+
+            let br = this.brightness;
+            if (br < 255) {
+                white = (white * br) >> 8;
+            }
+            let buf = this.buf;
+            let end = this.start + this._length;
+            for (let i = this.start; i < end; ++i) {
+                let ledoffset = i * 4;
+                buf[ledoffset + 3] = white;
+            }
+        }
+        private setPixelRGB(pixeloffset: number, rgb: number): void {
+            if (pixeloffset < 0
+                || pixeloffset >= this._length)
+                return;
+
+            let stride = this._mode === NeoPixelMode.RGBW ? 4 : 3;
+            pixeloffset = (pixeloffset + this.start) * stride;
+
+            let red = unpackR(rgb);
+            let green = unpackG(rgb);
+            let blue = unpackB(rgb);
+
+            let br = this.brightness;
+            if (br < 255) {
+                red = (red * br) >> 8;
+                green = (green * br) >> 8;
+                blue = (blue * br) >> 8;
+            }
+            this.setBufferRGB(pixeloffset, red, green, blue)
+        }
+        private setPixelW(pixeloffset: number, white: number): void {
+            if (this._mode !== NeoPixelMode.RGBW)
+                return;
+
+            if (pixeloffset < 0
+                || pixeloffset >= this._length)
+                return;
+
+            pixeloffset = (pixeloffset + this.start) * 4;
+
+            let br = this.brightness;
+            if (br < 255) {
+                white = (white * br) >> 8;
+            }
+            let buf = this.buf;
+            buf[pixeloffset + 3] = white;
+        }
+    }
+
+    /**
      * Create a new NeoPixel driver for `numleds` LEDs.
      * @param pin the pin where the neopixel is connected.
      * @param numleds number of leds in the strip, eg: 24,30,60,64
@@ -213,5 +522,4 @@ namespace Panel {
         CounterClockwise,
         Shortest
     }
-
-}
+｝
