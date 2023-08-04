@@ -71,8 +71,6 @@ namespace Panel {
         }
     )
 
-
-
     //% subcategory="Move"
     //% blockId=IdStrip block="WalkFwd (2sec) cycle:1<=>10[cycle] %cycle"
     //% cycle.min=1 cycle.max=10 cycle.defl=1
@@ -81,30 +79,32 @@ namespace Panel {
         basic.pause(2500 * cycle)
     }
 
+    buf: Buffer;
+    pin: DigitalPin;
+    // TODO: encode as bytes instead of 32bit
+    brightness: number;
+    start: number; // start offset in LED strip
+    _length: number; // number of LEDs
+    _mode: NeoPixelMode;
+    _matrixWidth: number; // number of leds in a matrix - if any
+
+    /**
+     * Shows all LEDs to a given color (range 0-255 for r, g, b).
+     * @param rgb RGB color of the LED
+     */
+    //% subcategory="LED"
+    //% blockId="neopixel_set_strip_color" block="%strip|show color %rgb=neopixel_colors"
+    //% strip.defl=strip
+    //% weight=85 blockGap=8
+    //% parts="neopixel"
+    showColor(rgb: number) {
+        rgb = rgb >> 0;
+        this.setAllRGB(rgb);
+        this.show();
+    }
+
+    
     export class Strip {
-        buf: Buffer;
-        pin: DigitalPin;
-        // TODO: encode as bytes instead of 32bit
-        brightness: number;
-        start: number; // start offset in LED strip
-        _length: number; // number of LEDs
-        _mode: NeoPixelMode;
-        _matrixWidth: number; // number of leds in a matrix - if any
-
-        /**
-         * Shows all LEDs to a given color (range 0-255 for r, g, b).
-         * @param rgb RGB color of the LED
-         */
-        //% blockId="neopixel_set_strip_color" block="%strip|show color %rgb=neopixel_colors"
-        //% strip.defl=strip
-        //% weight=85 blockGap=8
-        //% parts="neopixel"
-        showColor(rgb: number) {
-            rgb = rgb >> 0;
-            this.setAllRGB(rgb);
-            this.show();
-        }
-
         /**
          * Shows a rainbow pattern on all LEDs.
          * @param startHue the start hue value for the rainbow, eg: 1
