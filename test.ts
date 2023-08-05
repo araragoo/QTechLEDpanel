@@ -1,9 +1,9 @@
 /**
  * Well known colors for a NeoPixel strip
  */
-//enum NeoPixelColors {
+/*enum NeoPixelColors {
     //% block=red
-    Red: number = 0xFF0000,
+    Red = 0xFF0000,
     //% block=orange
     Orange = 0xFFA500,
     //% block=yellow
@@ -22,7 +22,27 @@
     White = 0xFFFFFF,
     //% block=black
     Black = 0x000000
-//}
+}*/
+    //% block=red
+    let Red = 0xFF0000;
+    //% block=orange
+    let Orange = 0xFFA500;
+    //% block=yellow
+    let Yellow = 0xFFFF00;
+    //% block=green
+    let Green = 0x00FF00;
+    //% block=blue
+    let Blue = 0x0000FF;
+    //% block=indigo
+    let Indigo = 0x4b0082;
+    //% block=violet
+    let Violet = 0x8a2be2;
+    //% block=purple
+    let Purple = 0xFF00FF;
+    //% block=white
+    let White = 0xFFFFFF;
+    //% block=black
+    let Black = 0x000000;
 
 /**
  * Different modes for RGB or RGB+W NeoPixel strips
@@ -46,7 +66,7 @@ enum NeoPixelMode {
      */
 //    export class Strip {
 //    class Strip {
-
+/*
         buf: Buffer;
         pin: DigitalPin;
         // TODO: encode as bytes instead of 32bit
@@ -55,6 +75,15 @@ enum NeoPixelMode {
         _length: number; // number of LEDs
         _mode: NeoPixelMode;
         _matrixWidth: number; // number of leds in a matrix - if any
+*/
+        let buf: Buffer;
+        let pin: DigitalPin;
+        // TODO: encode as bytes instead of 32bit
+        let brightness: number;
+        let start: number; // start offset in LED strip
+        let _length: number; // number of LEDs
+        let _mode: NeoPixelMode;
+        let _matrixWidth: number; // number of leds in a matrix - if any
 
         /**
          * Shows all LEDs to a given color (range 0-255 for r, g, b).
@@ -89,7 +118,8 @@ enum NeoPixelMode {
             const saturation = 100;
             const luminance = 50;
             const steps = this._length;
-            const direction = HueInterpolationDirection.Clockwise;
+//            const direction = HueInterpolationDirection.Clockwise;
+            const direction = HueInterpolationDirection_Clockwise;
 
             //hue
             const h1 = startHue;
@@ -99,9 +129,11 @@ enum NeoPixelMode {
             const hDistCCW = ((h1 + 360) - h2) % 360;
             const hStepCCW = Math.idiv(-(hDistCCW * 100), steps);
             let hStep: number;
-            if (direction === HueInterpolationDirection.Clockwise) {
-                hStep = hStepCW;
-            } else if (direction === HueInterpolationDirection.CounterClockwise) {
+//            if (direction === HueInterpolationDirection.Clockwise) {
+            if (direction === HueInterpolationDirection_Clockwise) {
+                    hStep = hStepCW;
+//            } else if (direction === HueInterpolationDirection.CounterClockwise) {
+            } else if (direction === HueInterpolationDirection_CounterClockwise) {
                 hStep = hStepCCW;
             } else {
                 hStep = hDistCW < hDistCCW ? hStepCW : hStepCCW;
@@ -153,7 +185,8 @@ enum NeoPixelMode {
         function showBarGraph(value: number, high: number): void {
             if (high <= 0) {
                 this.clear();
-                this.setPixelColor(0, NeoPixelColors.Yellow);
+//                this.setPixelColor(0, NeoPixelColors.Yellow);
+                this.setPixelColor(0, Yellow);
                 this.show();
                 return;
             }
@@ -170,7 +203,8 @@ enum NeoPixelMode {
                 for (let i = 0; i < n; ++i) {
                     if (i <= v) {
                         const b = Math.idiv(i * 255, n1);
-                        this.setPixelColor(i, neopixel.rgb(b, 0, 255 - b));
+//                        this.setPixelColor(i, neopixel.rgb(b, 0, 255 - b));
+                        this.setPixelColor(i, rgb(b, 0, 255 - b));
                     }
                     else this.setPixelColor(i, 0);
                 }
@@ -340,9 +374,11 @@ enum NeoPixelMode {
         //% parts="neopixel"
         //% blockSetVariable=range
 //        range(start: number, length: number): Strip {
-        function range(start: number, length: number): Strip {
+//        function range(start: number, length: number): Strip {
+        function range(start: number, length: number){
             start = start >> 0;
             length = length >> 0;
+/*
             let strip = new Strip();
             strip.buf = this.buf;
             strip.pin = this.pin;
@@ -351,7 +387,16 @@ enum NeoPixelMode {
             strip._length = Math.clamp(0, this._length - (strip.start - this.start), length);
             strip._matrixWidth = 0;
             strip._mode = this._mode;
-            return strip;
+*/
+            let strip_buf = this.buf;
+            let strip_pin = this.pin;
+            let strip_brightness = this.brightness;
+            let strip_start = this.start + Math.clamp(0, this._length - 1, start);
+            let strip_length = Math.clamp(0, this._length - (strip_start - this.start), length);
+            let strip_matrixWidth = 0;
+            let strip_mode = this._mode;
+//            return strip;
+            return;
         }
 
         /**
@@ -518,6 +563,7 @@ enum NeoPixelMode {
     //% blockSetVariable=strip
 //    export function create(pin: DigitalPin, numleds: number, mode: NeoPixelMode): Strip {
     function create(pin: DigitalPin, numleds: number, mode: NeoPixelMode): Strip {
+/*
         let strip = new Strip();
         let stride = mode === NeoPixelMode.RGBW ? 4 : 3;
         strip.buf = pins.createBuffer(numleds * stride);
@@ -528,6 +574,16 @@ enum NeoPixelMode {
         strip.setBrightness(128)
         strip.setPin(pin)
         return strip;
+*/
+        let stride = mode === NeoPixelMode.RGBW ? 4 : 3;
+        let strip2buf = pins.createBuffer(numleds * stride);
+        let strip2start = 0;
+        let strip2_length = numleds;
+        let strip2_mode = mode || NeoPixelMode.RGB;
+        let strip2_matrixWidth = 0;
+        let strip2setBrightness(128)
+        let strip2setPin(pin)
+        return;
     }
 
     /**
@@ -616,9 +672,12 @@ enum NeoPixelMode {
     }
 
 //    export enum HueInterpolationDirection {
-    enum HueInterpolationDirection {
+/*    enum HueInterpolationDirection {
         Clockwise,
         CounterClockwise,
         Shortest
-    }
+    }*/
+    let HueInterpolationDirection_Clockwise;
+    let HueInterpolationDirection_CounterClockwise;
+    let HueInterpolationDirection_Shortest;
 //}
